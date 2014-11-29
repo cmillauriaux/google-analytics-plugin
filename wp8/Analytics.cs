@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Runtime.Serialization;
 using WPCordovaClassLib.Cordova;
@@ -10,11 +10,13 @@ using GoogleAnalytics.Core;
 
 namespace Cordova.Extension.Commands
 {
-    public class Admob : BaseCommand
+    public class Analytics : BaseCommand
     {
         private string trackingId;
         private string userId;
-        private bool debugMode = false;
+        private bool debug = false;
+        private TrackerManager trackerManager;
+        private Tracker tracker;
 
 
         public void startTrackerWithId(string args)
@@ -33,11 +35,9 @@ namespace Cordova.Extension.Commands
         private void _startTrackerWithId(string trackingId)
         {
             this.trackingId = trackingId;
-            var config = new GoogleAnalytics.EasyTrackerConfig();
-            config.trackingId = "UA-XXXX-Y";
-            config.appName = "Test App";
-            config.appVersion = "1.0.0.0";
-            GoogleAnalytics.EasyTracker.current.config = config;
+            this.tracker = trackerManager.GetTracker(this.trackingId); // saves as default
+            this.tracker.AppName = "My app";
+            this.tracker.AppVersion = "1.0.0.0";
         }
 
         public void setUserId(string args)
@@ -56,6 +56,14 @@ namespace Cordova.Extension.Commands
         private void _setUserId(string userId)
         {
             this.userId = userId;
+            this.trackerManager = new TrackerManager(new PlatformInfoProvider()
+            {
+                AnonymousClientId = this.userId,
+                ScreenResolution = new Dimensions(1920, 1080),
+                UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko",
+                UserLanguage = "en-us",
+                ViewPortResolution = new Dimensions(1920, 1080)
+            });
         }
 
         public void debugMode(string args)
@@ -72,7 +80,7 @@ namespace Cordova.Extension.Commands
 
         private void _debugMode()
         {
-            this.debugMode = true;
+            this.debug = true;
         }
 
         public void trackView(string args)
@@ -87,7 +95,7 @@ namespace Cordova.Extension.Commands
 
         private void _trackView(string view)
         {
-            GoogleAnalytics.EasyTracker.getTracker().sendView(view);
+            this.tracker.SendView(view);
         }
     }
 }

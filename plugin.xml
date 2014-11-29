@@ -64,8 +64,6 @@
         </config-file>
 
         <source-file src="wp8/Analytics.cs" />
-        <framework src="wp8/System.Net.Http.Extensions.dll" custom="true" />
-        <framework src="wp8/System.Net.Http.Primitives.dll" custom="true" />
         <framework src="wp8/GoogleAnalytics.Core.dll" custom="true" />
     </platform>
 </plugin>
