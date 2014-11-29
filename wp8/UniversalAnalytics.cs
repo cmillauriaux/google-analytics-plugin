@@ -10,13 +10,11 @@ using GoogleAnalytics.Core;
 
 namespace Cordova.Extension.Commands
 {
-    public class Analytics : BaseCommand
+    public class UniversalAnalytics : BaseCommand
     {
         private string trackingId;
         private string userId;
         private bool debug = false;
-        private TrackerManager trackerManager;
-        private Tracker tracker;
 
 
         public void startTrackerWithId(string args)
@@ -35,9 +33,9 @@ namespace Cordova.Extension.Commands
         private void _startTrackerWithId(string trackingId)
         {
             this.trackingId = trackingId;
-            this.tracker = trackerManager.GetTracker(this.trackingId); // saves as default
-            this.tracker.AppName = "My app";
-            this.tracker.AppVersion = "1.0.0.0";
+            var config = new GoogleAnalytics.EasyTrackerConfig();
+            config.TrackingId = trackingId;
+            GoogleAnalytics.EasyTracker.Current.Config = config;
         }
 
         public void setUserId(string args)
@@ -56,14 +54,6 @@ namespace Cordova.Extension.Commands
         private void _setUserId(string userId)
         {
             this.userId = userId;
-            this.trackerManager = new TrackerManager(new PlatformInfoProvider()
-            {
-                AnonymousClientId = this.userId,
-                ScreenResolution = new Dimensions(1920, 1080),
-                UserAgent = "Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0) like Gecko",
-                UserLanguage = "en-us",
-                ViewPortResolution = new Dimensions(1920, 1080)
-            });
         }
 
         public void debugMode(string args)
@@ -95,7 +85,26 @@ namespace Cordova.Extension.Commands
 
         private void _trackView(string view)
         {
-            this.tracker.SendView(view);
+            GoogleAnalytics.EasyTracker.GetTracker().SendView(view);
+        }
+
+        public void trackEvent(string args)
+        {
+            string category = JsonHelper.Deserialize<string[]>(args)[0];
+            string action = JsonHelper.Deserialize<string[]>(args)[1];
+            string label = JsonHelper.Deserialize<string[]>(args)[2];
+            string value = JsonHelper.Deserialize<string[]>(args)[3];
+            long valueLong = long.Parse(value);
+
+            Deployment.Current.Dispatcher.BeginInvoke(() =>
+            {
+                _trackEvent(category, action, label, valueLong);
+            });
+        }
+
+        private void _trackEvent(string category, string action, string label, long value)
+        {
+            GoogleAnalytics.EasyTracker.GetTracker().SendEvent(category, action, label, value);
         }
     }
 }
