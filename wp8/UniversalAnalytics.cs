@@ -7,6 +7,8 @@ using WPCordovaClassLib.Cordova.JSON;
 using System.Diagnostics; //Debug.WriteLine
 //
 using GoogleAnalytics.Core;
+using Windows.ApplicationModel;
+using GoogleAnalytics;
 
 namespace Cordova.Extension.Commands
 {
@@ -15,6 +17,7 @@ namespace Cordova.Extension.Commands
         private string trackingId;
         private string userId;
         private bool debug = false;
+        private Tracker tracker;
 
 
         public void startTrackerWithId(string args)
@@ -33,9 +36,10 @@ namespace Cordova.Extension.Commands
         private void _startTrackerWithId(string trackingId)
         {
             this.trackingId = trackingId;
-            var config = new GoogleAnalytics.EasyTrackerConfig();
-            config.TrackingId = trackingId;
-            GoogleAnalytics.EasyTracker.Current.Config = config;
+            var trackerConfig = new GoogleAnalytics.EasyTrackerConfig();
+            trackerConfig.TrackingId = this.trackingId;
+            GoogleAnalytics.EasyTracker.Current.Config = trackerConfig;
+            this.tracker = GoogleAnalytics.EasyTracker.GetTracker();
         }
 
         public void setUserId(string args)
@@ -85,26 +89,7 @@ namespace Cordova.Extension.Commands
 
         private void _trackView(string view)
         {
-            GoogleAnalytics.EasyTracker.GetTracker().SendView(view);
-        }
-
-        public void trackEvent(string args)
-        {
-            string category = JsonHelper.Deserialize<string[]>(args)[0];
-            string action = JsonHelper.Deserialize<string[]>(args)[1];
-            string label = JsonHelper.Deserialize<string[]>(args)[2];
-            string value = JsonHelper.Deserialize<string[]>(args)[3];
-            long valueLong = long.Parse(value);
-
-            Deployment.Current.Dispatcher.BeginInvoke(() =>
-            {
-                _trackEvent(category, action, label, valueLong);
-            });
-        }
-
-        private void _trackEvent(string category, string action, string label, long value)
-        {
-            GoogleAnalytics.EasyTracker.GetTracker().SendEvent(category, action, label, value);
+            this.tracker.SendView(view);
         }
     }
 }
